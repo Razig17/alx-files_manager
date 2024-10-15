@@ -4,9 +4,14 @@ const dbClient = require('../utils/db');
 class UsersController {
   static postNew(req, res) {
     const { email, password } = req.body;
-    if (!email) return res.status(400).json({ error: 'Missing email' });
-    if (!password) return res.status(400).json({ error: 'Missing password' });
-
+    if (!email) {
+      res.status(400).json({ error: 'Missing email' });
+      return;
+    }
+    if (!password) {
+      res.status(400).json({ error: 'Missing password' });
+      return;
+    }
     const users = dbClient.db.collection('users');
     users.findOne({ email }, async (err, user) => {
       if (user) {
