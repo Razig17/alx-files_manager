@@ -1,3 +1,5 @@
+import { ObjectID } from 'mongodb';
+
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
@@ -8,7 +10,7 @@ class FilesController {
   static async postUpload(req, res) {
     const token = req.header('X-Token');
     const { name, type } = req.body;
-    const parentId = parseInt(req.body.parentId, 10) || 0;
+    const parentId = req.body.parentId || 0;
     const isPublic = req.body.isPublic || false;
     let { data } = req.body;
     const key = `auth_${token}`;
@@ -35,6 +37,17 @@ class FilesController {
       return;
     }
     const files = dbClient.db.collection('files');
+    if (parentId) {
+      const _id = new ObjectID(parentId);
+      const file = await files.findOne({ _id, userId });
+      if (!file) {
+        res.status(400).json({ error: 'Parent is not a folder' });
+        return;
+      }
+      if (file.type !== 'folder') {
+        res.status(400).json({ error: 'Parent is not a folder' });
+      }
+    }
     if (type === 'folder') {
       files.insertOne({
         userId, name, type, isPublic, parentId,
