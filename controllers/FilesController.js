@@ -163,7 +163,7 @@ class FilesController {
     if (!value) {
       res.status(404).json({ error: 'Not found' });
     }
-    res.status(200).json(file);
+    res.status(200).json(value);
   }
 
   static async putUnpublish(req, res) {
@@ -184,7 +184,7 @@ class FilesController {
     if (!value) {
       res.status(404).json({ error: 'Not found' });
     }
-    res.status(200).json(file);
+    res.status(200).json(value);
   }
 }
 
