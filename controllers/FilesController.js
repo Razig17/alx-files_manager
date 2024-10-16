@@ -200,12 +200,12 @@ class FilesController {
     userId = new ObjectID(userId);
     const files = dbClient.db.collection('files');
     _id = new ObjectID(_id);
-    const file = await files.findOne({ _id, userId });
+    const file = await files.findOne({ _id });
     if (!file) {
       res.status(404).json({ error: 'Not found' });
       return;
     }
-    if (!file.isPublic && file.userId.toString() !== userId) {
+    if (!file.isPublic && (`${file.userId}` !== `${userId}`)) {
       res.status(404).json({ error: 'Not found' });
       return;
     }
