@@ -41,7 +41,7 @@ class FilesController {
       const _id = new ObjectID(parentId);
       const file = await files.findOne({ _id, userId });
       if (!file) {
-        res.status(400).json({ error: 'Parent is not a folder' });
+        res.status(400).json({ error: 'Parent not found' });
         return;
       }
       if (file.type !== 'folder') {
