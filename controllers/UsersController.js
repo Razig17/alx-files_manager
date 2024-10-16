@@ -43,7 +43,7 @@ class UsersController {
       if (!user) {
         res.status(401).json({ error: 'Unauthorized' });
       } else {
-        res.status(200).json({ id: user._id, email: user.email });
+        res.status(200).json({ id: userId, email: user.email });
       }
     });
   }
