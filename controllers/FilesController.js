@@ -4,8 +4,11 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs').promises;
 const path = require('path');
 const mime = require('mime-types');
+const Bull = require('bull');
 const dbClient = require('../utils/db');
 const redisClient = require('../utils/redis');
+
+const fileQueue = new Bull('fileQueue', 'redis://127.0.0.1:6379');
 
 class FilesController {
   static async postUpload(req, res) {
@@ -27,7 +30,7 @@ class FilesController {
       return;
     }
     if (data) {
-      data = Buffer.from(data, 'base64').toString('utf-8');
+      data = Buffer.from(data, 'base64');
     }
     const types = ['folder', 'file', 'image'];
     if (!type || !types.includes(type)) {
@@ -71,7 +74,7 @@ class FilesController {
       const localPath = path.join(dir, uuidv4());
       console.log(localPath);
       await fs.mkdir(dir, { recursive: true });
-      await fs.writeFile(localPath, data);
+      await fs.writeFile(localPath, data, 'utf-8');
       files.insertOne({
         userId, name, type, isPublic, parentId, localPath,
       }).then((addedFile) => {
@@ -85,6 +88,12 @@ class FilesController {
             parentId,
           },
         );
+        if (type === 'image') {
+          fileQueue.add({
+            userId,
+            fileId: addedFile.insertedId,
+          });
+        }
       }).catch((err) => {
         console.log(err);
       });
@@ -193,6 +202,8 @@ class FilesController {
     const key = `auth_${token}`;
     let userId = await redisClient.get(key);
     let _id = req.params.id;
+    const { size } = req.query;
+
     if (userId) {
       userId = new ObjectID(userId);
     }
@@ -212,8 +223,12 @@ class FilesController {
       res.status(400).json({ error: "A folder doesn't have content" });
       return;
     }
+    let filePath = file.localPath;
+    if (size) {
+      filePath = `${filePath}_${size}`;
+    }
     try {
-      const data = await fs.readFile(file.localPath, 'utf-8');
+      const data = await fs.readFile(filePath, 'utf-8');
       const contentType = mime.contentType(file.name);
       if (contentType) {
         res.set('Content-Type', contentType);
