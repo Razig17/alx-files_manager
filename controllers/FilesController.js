@@ -14,12 +14,13 @@ class FilesController {
     const isPublic = req.body.isPublic || false;
     let { data } = req.body;
     const key = `auth_${token}`;
-    const userId = await redisClient.get(key);
+    let userId = await redisClient.get(key);
     const dir = process.env.FOLDER_PATH || '/tmp/files_manager';
     if (!userId) {
       res.status(401).json({ error: 'Unauthorized' });
       return;
     }
+    userId = new ObjectID(userId);
     if (!name) {
       res.status(400).json({ error: 'Missing name' });
       return;
