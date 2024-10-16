@@ -193,9 +193,8 @@ class FilesController {
     const key = `auth_${token}`;
     let userId = await redisClient.get(key);
     let _id = req.params.id;
-    if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
+    if (userId) {
+      userId = new ObjectID(userId);
     }
     userId = new ObjectID(userId);
     const files = dbClient.db.collection('files');
@@ -215,9 +214,9 @@ class FilesController {
     }
     try {
       const data = await fs.readFile(file.localPath, 'utf-8');
-      const type = mime.contentType(file.name);
-      if (type) {
-        res.set('Content-Type', type);
+      const contentType = mime.contentType(file.name);
+      if (contentType) {
+        res.set('Content-Type', contentType);
       }
       res.status(200).send(data);
     } catch (err) {
